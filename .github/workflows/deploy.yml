@@ -1,4 +1,4 @@
-name: Deploy GreenFarm to GitHub Pages
+name: Deploy AgriSupplyTracker to GitHub Pages
 on:
   push:
     branches: [main]
@@ -26,7 +26,6 @@ jobs:
       - run: npm run build
         env:
           VITE_CONTRACT_ADDRESS: ${{ vars.VITE_CONTRACT_ADDRESS }}
-          VITE_INFURA_API_KEY: ${{ vars.VITE_INFURA_API_KEY }}
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:

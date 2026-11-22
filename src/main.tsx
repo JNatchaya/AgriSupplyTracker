@@ -331,7 +331,7 @@ function App() {
 
   return <>
     <header className="top"><div className="frame header-inner">
-      <a href="./" className="brand"><span className="mark" aria-hidden="true">✳</span><span>AgriSupplyTracker</span></a>
+      <a href="./" className="brand"><span className="mark" aria-hidden="true"><i /><i /><i /></span><span>AgriSupplyTracker</span></a>
       <div className="connection"><span className="network"><i />{live ? 'Sepolia' : 'โหมดตัวอย่าง'}</span>
         {live && (account ? <>
           <span className="wallet-address" title={account}>{short(account)}</span>
@@ -340,109 +340,111 @@ function App() {
         </> : <button type="button" className="outline" onClick={connect} disabled={connecting || busy}>{connecting ? 'รอเลือกบัญชีใน MetaMask…' : 'เชื่อม MetaMask'}</button>)}
       </div>
     </div></header>
-    <div className="frame workspace">
-      <aside className="sidebar" aria-label="จัดการข้อมูล">
-        <h2 className="sidebar-title">จัดการข้อมูล</h2>
-        <nav className="side-menu" aria-label="ฟังก์ชันจัดการข้อมูล">
-          {menuGroups.map(group => <div className="menu-group" key={group.label}>
-            <h3>{group.label}</h3>
-            {group.actions.map(action => <button type="button" key={action} aria-pressed={selected === action}
-              disabled={busy} onClick={() => {
-                setOperation(action)
-                setTx(undefined)
-                if (selected === action) formHeading.current?.focus()
-              }}>{definitions[action].label}</button>)}
-          </div>)}
-        </nav>
-      </aside>
-      <main>
-        <section className="hero">
-          <div className="hero-content">
-            <h1>ตรวจสอบย้อนกลับ<br />ล็อตสินค้าเกษตร</h1>
-            <p>ค้นหาที่มา สถานะ และประวัติการส่งมอบด้วย Batch ID</p>
-            <form className="search" onSubmit={event => { event.preventDefault(); if (query) void search(query) }}>
-              <input required aria-label="Batch ID" placeholder="ระบุ Batch ID" value={query} onChange={event => setQuery(event.target.value)} />
-              <button disabled={searching || busy}>{searching ? 'กำลังค้นหา…' : 'ค้นหาล็อต'}</button>
-            </form>
-            {searchError && <p className="search-error" role="alert">{searchError}</p>}
-          </div>
-          <div className="hero-lines" aria-hidden="true"><span /><span /><span /><span /><span /></div>
-        </section>
-
-        <section className="card utilities">
-          <div><h2>บัญชีและสิทธิ์</h2>
-            <p>{account ? `${short(account)} · ${roleLabel}` : live ? 'เชื่อม MetaMask เพื่อทำรายการตามสิทธิ์ของบัญชี' : 'ลองตรวจสิทธิ์ด้วยที่อยู่เกษตรกรในล็อตตัวอย่าง'}</p>
-            {walletError && <p role="alert" className="error">{walletError}</p>}
-            {(live ? manager : demoManager) && <p className="address">ผู้ดูแลหลัก <code>{live ? manager : demoManager}</code></p>}
-          </div>
-          <form className="lookup" onSubmit={checkRole}>
-            <input aria-label="ที่อยู่กระเป๋าสำหรับตรวจสอบสิทธิ์" placeholder="ที่อยู่กระเป๋า 0x…" value={lookup} onChange={event => {
-              roleRequest.current++; setLookup(event.target.value); setLookupResult('')
-            }} required />
-            <button className="outline">ตรวจสิทธิ์</button>
-            <output>{lookupResult}</output>
+    <main>
+      <section className="hero frame">
+        <div className="hero-content">
+          <h1>ตรวจสอบย้อนกลับล็อตสินค้าเกษตร</h1>
+          <p>ค้นหาที่มา สถานะ และประวัติการส่งมอบด้วย Batch ID</p>
+          <form className="search" onSubmit={event => { event.preventDefault(); if (query) void search(query) }}>
+            <input required aria-label="Batch ID" placeholder="ระบุ Batch ID" value={query} onChange={event => setQuery(event.target.value)} />
+            <button disabled={searching || busy}>{searching ? 'กำลังค้นหา…' : 'ค้นหาล็อต'}</button>
           </form>
-        </section>
+          {searchError && <p className="search-error" role="alert">{searchError}</p>}
+        </div>
+      </section>
 
-        {(selected || tx) && <section className="card operations">
-          <h2 ref={formHeading} tabIndex={-1}>{selected ? definitions[selected].label : 'สถานะธุรกรรม'}</h2>
-          {selected && !canSubmit && <p className="demo-help">{previewMessage}</p>}
-          {selected && <form className="operation-form" key={`${selected}:${account ?? ''}:${needsBatch ? result?.id ?? '' : ''}`} onSubmit={submit}>
-            <fieldset disabled={busy}>
-              <legend>{definitions[selected].label}{needsBatch && result && ` · ${result.id}`}</legend>
-              {definitions[selected].fields.map(({ name, label, type, optional, options: choices }) => <label key={name}>{label}
-                {choices ? <select name={name} required defaultValue="">
-                  <option value="" disabled>เลือก{label}</option>
-                  {choices.filter(choice => name !== 'stage' || !canSubmit || choice.value === (batch?.status ?? 0) + 1)
-                    .map(choice => <option key={choice.value} value={choice.value}>{choice.label}</option>)}
-                </select> : type === 'textarea' ? <textarea name={name} required={!optional} /> : <input name={name} type={type ?? 'text'} required={!optional} />}
-              </label>)}
-              {selected === 'requestTransfer' && <p>ส่งมอบจากเกษตรกรไปยังผู้ขนส่ง หรือจากผู้ขนส่งไปยังผู้จัดจำหน่าย</p>}
-              {definitions[selected].fields.length === 0 && <p>รายการนี้ใช้ Batch ID ของล็อตที่เปิดอยู่</p>}
-              {canSubmit && <button>{busy ? 'กำลังดำเนินการ…' : 'ยืนยันผ่าน MetaMask'}</button>}
-            </fieldset>
-          </form>}
-          {tx && <p className={tx.error ? 'error' : 'tx'} role={tx.error ? 'alert' : 'status'}>{tx.message}
-            {tx.hash && <> · <a href={`${explorer}/tx/${tx.hash}`} target="_blank" rel="noreferrer">ดูธุรกรรม</a></>}
-          </p>}
-        </section>}
+      <div className="frame workspace">
+        <aside className="sidebar" aria-label="จัดการข้อมูล">
+          <h2 className="sidebar-title">จัดการข้อมูล</h2>
+          <nav className="side-menu" aria-label="ฟังก์ชันจัดการข้อมูล">
+            {menuGroups.map(group => <div className="menu-group" key={group.label}>
+              <h3>{group.label}</h3>
+              {group.actions.map(action => <button type="button" key={action} aria-pressed={selected === action}
+                disabled={busy} onClick={() => {
+                  setOperation(action)
+                  setTx(undefined)
+                  if (selected === action) formHeading.current?.focus()
+                }}>{definitions[action].label}</button>)}
+            </div>)}
+          </nav>
+        </aside>
+        <div className="content">
+          {(selected || tx) && <section className="card operations">
+            <h2 id="operation-heading" ref={formHeading} tabIndex={-1}>{selected ? definitions[selected].label : 'สถานะธุรกรรม'}</h2>
+            {selected && !canSubmit && <p className="demo-help">{previewMessage}</p>}
+            {selected && <form className="operation-form" key={`${selected}:${account ?? ''}:${needsBatch ? result?.id ?? '' : ''}`} onSubmit={submit}>
+              <fieldset disabled={busy} aria-labelledby="operation-heading">
+                {needsBatch && result && <p className="form-batch">Batch ID <code>{result.id}</code></p>}
+                {definitions[selected].fields.map(({ name, label, type, optional, options: choices }) => <label key={name}>{label}
+                  {choices ? <select name={name} required defaultValue="">
+                    <option value="" disabled>เลือก{label}</option>
+                    {choices.filter(choice => name !== 'stage' || !canSubmit || choice.value === (batch?.status ?? 0) + 1)
+                      .map(choice => <option key={choice.value} value={choice.value}>{choice.label}</option>)}
+                  </select> : type === 'textarea' ? <textarea name={name} required={!optional} /> : <input name={name} type={type ?? 'text'} required={!optional} />}
+                </label>)}
+                {selected === 'requestTransfer' && <p>ส่งมอบจากเกษตรกรไปยังผู้ขนส่ง หรือจากผู้ขนส่งไปยังผู้จัดจำหน่าย</p>}
+                {definitions[selected].fields.length === 0 && <p>รายการนี้ใช้ Batch ID ของล็อตที่เปิดอยู่</p>}
+                {canSubmit && <button>{busy ? 'กำลังดำเนินการ…' : 'ยืนยันผ่าน MetaMask'}</button>}
+              </fieldset>
+            </form>}
+            {tx && <p className={tx.error ? 'error' : 'tx'} role={tx.error ? 'alert' : 'status'}>{tx.message}
+              {tx.hash && <> · <a href={`${explorer}/tx/${tx.hash}`} target="_blank" rel="noreferrer">ดูธุรกรรม</a></>}
+            </p>}
+          </section>}
 
-        {result && <div className="results">
-          <section className="card details">
-            <div className="card-heading"><div><p className="batch-id">BATCH ID · {result.batch.batchCode}</p><h2>{result.batch.name}</h2></div>
-              <span className={result.batch.recallState === 1 ? 'badge danger' : 'badge'}>{result.batch.recallState === 1 ? 'อยู่ระหว่างเรียกคืน' : stages[result.batch.status]}</span>
+          {!result && !searching && !searchError && <p className="card empty-state">ระบุ Batch ID ด้านบนเพื่อดูข้อมูลล็อตและประวัติการส่งมอบ</p>}
+          {result && <div className="results">
+            <section className="card details">
+              <div className="card-heading"><div><h2>{result.batch.name}</h2><p className="batch-id">Batch ID <code>{result.batch.batchCode}</code></p></div>
+                <span className={result.batch.recallState === 1 ? 'badge danger' : 'badge'}>{result.batch.recallState === 1 ? 'อยู่ระหว่างเรียกคืน' : stages[result.batch.status]}</span>
+              </div>
+              {result.batch.recallState === 1 && <p className="error">{result.batch.recallNote}</p>}
+              {result.batch.recallState === 2 && <p>ปิดการเรียกคืนแล้ว · {result.batch.recallNote}</p>}
+              <ol className="stages" aria-label="ขั้นตอนของล็อต">{stages.map((stage, index) => <li key={stage} aria-current={index === result.batch.status ? 'step' : undefined}
+                className={index <= result.batch.status ? 'reached' : ''}><span>{index < result.batch.status ? '✓' : index + 1}</span>{stage}</li>)}</ol>
+              <dl className="metadata"><div><dt>แหล่งผลิต</dt><dd>{result.batch.farmLocation}</dd></div>
+                <div><dt>เวลาเก็บเกี่ยว</dt><dd>{date(result.batch.harvestDate)}</dd></div>
+                <div><dt>ใบรับรอง</dt><dd>{result.batch.certificate}</dd></div>
+                <div><dt>เกษตรกร</dt><dd><code>{result.batch.producer}</code></dd></div>
+                <div><dt>ผู้ครอบครองปัจจุบัน</dt><dd><code>{result.batch.holder}</code></dd></div>
+                {!same(result.batch.proposedHolder, zeroAddress) && <div><dt>รอรับมอบโดย</dt><dd><code>{result.batch.proposedHolder}</code></dd></div>}
+              </dl>
+            </section>
+            <section className="card history">
+              <div className="card-heading"><h2>ประวัติล็อต</h2><span className="count">{String(result.count)} รายการ</span></div>
+              <ol className="timeline">{entries.map((entry, index) => <li key={index}>
+                <time>{date(entry.recordedAt)}</time>
+                <h3>{events[entry.activity]}</h3>
+                {entry.details && <p>{entry.details}</p>}
+                <p className="history-meta">{stages[entry.status]} · ผู้ทำรายการ <code title={entry.performedBy}>{short(entry.performedBy)}</code>
+                  {!same(entry.from, zeroAddress) && <> · จาก <code title={entry.from}>{short(entry.from)}</code></>}
+                  {!same(entry.to, zeroAddress) && <> · ถึง <code title={entry.to}>{short(entry.to)}</code></>}
+                </p>
+              </li>)}</ol>
+              {historyError && <p role="alert" className="error">{historyError}</p>}
+              {BigInt(entries.length) < result.count && <button className="outline" disabled={loadingHistory} onClick={() => void loadPage(batchKey(result.id), result.count, entries.length, searchVersion.current)}>
+                {loadingHistory ? 'กำลังโหลด…' : historyError ? 'ลองโหลดอีกครั้ง' : 'โหลดประวัติเพิ่ม'}
+              </button>}
+            </section>
+          </div>}
+          <section className="card utilities">
+            <div><h2>บัญชีและสิทธิ์</h2>
+              <p>{account ? `${short(account)} · ${roleLabel}` : live ? 'เชื่อม MetaMask เพื่อทำรายการตามสิทธิ์ของบัญชี' : 'ลองตรวจสิทธิ์ด้วยที่อยู่เกษตรกรในล็อตตัวอย่าง'}</p>
+              {walletError && <p role="alert" className="error">{walletError}</p>}
+              {(live ? manager : demoManager) && <p className="address">ผู้ดูแลหลัก <code>{live ? manager : demoManager}</code></p>}
             </div>
-            {result.batch.recallState === 1 && <p className="error">{result.batch.recallNote}</p>}
-            {result.batch.recallState === 2 && <p>ปิดการเรียกคืนแล้ว · {result.batch.recallNote}</p>}
-            <ol className="stages">{stages.map((stage, index) => <li key={stage} aria-current={index === result.batch.status ? 'step' : undefined}
-              className={index <= result.batch.status ? 'reached' : ''}><span>{index < result.batch.status ? '✓' : index + 1}</span>{stage}</li>)}</ol>
-            <dl className="metadata"><div><dt>แหล่งผลิต</dt><dd>{result.batch.farmLocation}</dd></div>
-              <div><dt>เวลาเก็บเกี่ยว</dt><dd>{date(result.batch.harvestDate)}</dd></div>
-              <div><dt>ใบรับรอง</dt><dd>{result.batch.certificate}</dd></div>
-              <div><dt>เกษตรกร</dt><dd><code>{result.batch.producer}</code></dd></div>
-              <div><dt>ผู้ครอบครองปัจจุบัน</dt><dd><code>{result.batch.holder}</code></dd></div>
-              {!same(result.batch.proposedHolder, zeroAddress) && <div><dt>รอรับมอบโดย</dt><dd><code>{result.batch.proposedHolder}</code></dd></div>}
-            </dl>
+            <form className="lookup" onSubmit={checkRole}>
+              <input aria-label="ที่อยู่กระเป๋าสำหรับตรวจสอบสิทธิ์" placeholder="ที่อยู่กระเป๋า 0x…" value={lookup} onChange={event => {
+                roleRequest.current++; setLookup(event.target.value); setLookupResult('')
+              }} required />
+              <button className="outline">ตรวจสิทธิ์</button>
+              <output>{lookupResult}</output>
+            </form>
           </section>
-          <section className="card history">
-            <div className="card-heading"><h2>ประวัติล็อต</h2><span className="count">{String(result.count)} รายการ</span></div>
-            <ol className="timeline">{entries.map((entry, index) => <li key={index}>
-              <time>{date(entry.recordedAt)}</time>
-              <h3>{events[entry.activity]}</h3>
-              {entry.details && <p>{entry.details}</p>}
-              <p className="history-meta">{stages[entry.status]} · ผู้ทำรายการ <code title={entry.performedBy}>{short(entry.performedBy)}</code>
-                {!same(entry.from, zeroAddress) && <> · จาก <code title={entry.from}>{short(entry.from)}</code></>}
-                {!same(entry.to, zeroAddress) && <> · ถึง <code title={entry.to}>{short(entry.to)}</code></>}
-              </p>
-            </li>)}</ol>
-            {historyError && <p role="alert" className="error">{historyError}</p>}
-            {BigInt(entries.length) < result.count && <button className="outline" disabled={loadingHistory} onClick={() => void loadPage(batchKey(result.id), result.count, entries.length, searchVersion.current)}>
-              {loadingHistory ? 'กำลังโหลด…' : historyError ? 'ลองโหลดอีกครั้ง' : 'โหลดประวัติเพิ่ม'}
-            </button>}
-          </section>
-        </div>}
-      </main>
-    </div>
+
+        </div>
+      </div>
+    </main>
     <footer className="frame">AgriSupplyTracker <span>{live ? 'Ethereum Sepolia' : 'ข้อมูลตัวอย่าง'}</span></footer>
   </>
 }

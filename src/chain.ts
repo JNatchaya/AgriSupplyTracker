@@ -21,10 +21,10 @@ export const abi = parseAbi([
 
 const configuredAddress = import.meta.env.VITE_CONTRACT_ADDRESS?.trim() ?? ''
 const apiKey = import.meta.env.VITE_INFURA_API_KEY?.trim() ?? ''
-export const live = isAddress(configuredAddress) && Boolean(apiKey)
+export const live = isAddress(configuredAddress)
 const client = createPublicClient({
   chain: sepolia,
-  transport: http(`https://sepolia.infura.io/v3/${apiKey}`),
+  transport: http(apiKey ? `https://sepolia.infura.io/v3/${apiKey}` : 'https://ethereum-sepolia-rpc.publicnode.com'),
 })
 const contract = { abi, address: configuredAddress as Address }
 export const explorer = sepolia.blockExplorers.default.url
