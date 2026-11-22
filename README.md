@@ -122,23 +122,5 @@
 
 ![ผู้จัดจำหน่ายอัปเดตเป็นถึงร้านค้า ประวัติล็อตแสดงทั้งหมด 14 รายการ](docs/sepolia-test/18-delivered.png)
 
-## รันในเครื่อง
 
-ใช้ Node.js 22 แล้วรัน `npm ci` และ `npm run dev` หากยังไม่ได้ตั้งค่า ระบบจะแสดงล็อตตัวอย่าง `GF-2026-001` และเปิดดูฟอร์มทำรายการได้ทุกเมนู
 
-## เชื่อม Sepolia
-
-1. Deploy สัญญา `AgriSupplyTracker.sol` บน Sepolia เช่น ผ่าน Remix และจดที่อยู่สัญญา บัญชีที่ deploy จะเป็นผู้จัดการ
-2. คัดลอก `.env.example` เป็น `.env.local` แล้วใส่ `VITE_CONTRACT_ADDRESS` จากนั้นเปิด Vite ใหม่ ระบบใช้ RPC สาธารณะของ Sepolia เป็นค่าเริ่มต้น หากต้องการใช้ Infura ให้ใส่ `VITE_INFURA_API_KEY` เพิ่ม
-3. ให้ผู้ดูแลหลักเชื่อม MetaMask และใช้เมนูกำหนดสิทธิ์เพื่อเพิ่มบัญชีเกษตรกร ผู้ขนส่ง หรือผู้จัดจำหน่าย บัญชีที่ทำธุรกรรมต้องมี Sepolia ETH สำหรับค่า gas
-
-ค่าที่ขึ้นต้นด้วย `VITE_` จะถูกใส่ไว้ในไฟล์ที่ส่งถึงเบราว์เซอร์ ให้ใช้ Infura API key ที่ตั้งใจเปิดใช้จากหน้าเว็บ จำกัดการใช้งานของ key ในแดชบอร์ดของ Infura ตามที่รองรับ และเก็บ API secret กับ private key ไว้นอกโปรเจกต์
-
-## GitHub Pages
-
-1. นำโปรเจกต์ขึ้น repository บน branch `main`
-2. ตั้งค่า **Settings → Pages → Build and deployment → Source** เป็น **GitHub Actions**
-3. ที่ **Settings → Secrets and variables → Actions → Variables** เพิ่ม repository variable ชื่อ `VITE_CONTRACT_ADDRESS`
-4. รัน workflow **Deploy AgriSupplyTracker to GitHub Pages** จากแท็บ Actions หรือ push ไปที่ `main` เพื่อให้ workflow ทำงาน
-
-GitHub Pages ให้บริการไฟล์ที่บิลด์แล้วจาก `dist/` ข้อมูลอยู่บน Sepolia จึงปิดเครื่องได้หลังเผยแพร่เว็บ
